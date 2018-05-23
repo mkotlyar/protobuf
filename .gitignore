@@ -187,3 +187,6 @@ cmake/cmake-build-debug/
 # Common build subdirectories.
 ./.build/
 ./_build/
+
+# VS Code settings
+.vscode
