@@ -70,7 +70,7 @@ class LIBPROTOC_EXPORT MatlabGenerator :
   bool Generate(const ::google::protobuf::FileDescriptor* file,
                 const ::std::string& parameter,
                 ::google::protobuf::compiler::GeneratorContext* output_directory,
-                ::std::string* error) const;
+                ::std::string* error) const override;
 
   enum MatlabType {
     MATLABTYPE_INT32      = 1,    // TYPE_SINT32, TYPE_INT32, TYPE_SFIXED32
@@ -148,7 +148,10 @@ class LIBPROTOC_EXPORT MatlabGenerator :
   GOOGLE_DISALLOW_EVIL_CONSTRUCTORS(MatlabGenerator);
 };
 
-}  // namespace cpp
+inline MatlabGenerator::MatlabGenerator() {}
+inline MatlabGenerator::~MatlabGenerator() {}
+
+}  // namespace matlab
 }  // namespace compiler
 }  // namespace protobuf
 

@@ -136,8 +136,8 @@ MatlabGenerator::kMatlabTypeToString[MatlabGenerator::MAX_MATLABTYPE + 1] = {
   "enum", // MATLABTYPE_ENUM
 };
 
-MatlabGenerator::MatlabGenerator() {}
-MatlabGenerator::~MatlabGenerator() {}
+//MatlabGenerator::MatlabGenerator() {}
+//MatlabGenerator::~MatlabGenerator() {}
 
 
 bool MatlabGenerator::Generate(const FileDescriptor* file,
@@ -710,4 +710,4 @@ string MatlabGenerator::ReadFunctionName(const Descriptor & descriptor) const {
 }  // namespace matlab
 }  // namespace compiler
 }  // namespace protobuf
-}  // namespace google
+}  // namespace farsounder
