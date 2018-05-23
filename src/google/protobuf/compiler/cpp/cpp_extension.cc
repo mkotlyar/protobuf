@@ -1,6 +1,6 @@
 // Protocol Buffers - Google's data interchange format
 // Copyright 2008 Google Inc.  All rights reserved.
-// http://code.google.com/p/protobuf/
+// https://developers.google.com/protocol-buffers/
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -35,9 +35,10 @@
 #include <google/protobuf/compiler/cpp/cpp_extension.h>
 #include <map>
 #include <google/protobuf/compiler/cpp/cpp_helpers.h>
-#include <google/protobuf/stubs/strutil.h>
-#include <google/protobuf/io/printer.h>
 #include <google/protobuf/descriptor.pb.h>
+#include <google/protobuf/io/printer.h>
+#include <google/protobuf/stubs/strutil.h>
+
 
 namespace google {
 namespace protobuf {
@@ -57,9 +58,9 @@ string ExtendeeClassName(const FieldDescriptor* descriptor) {
 }  // anonymous namespace
 
 ExtensionGenerator::ExtensionGenerator(const FieldDescriptor* descriptor,
-                                       const string& dllexport_decl)
+                                       const Options& options)
   : descriptor_(descriptor),
-    dllexport_decl_(dllexport_decl) {
+    options_(options) {
   // Construct type_traits_.
   if (descriptor_->is_repeated()) {
     type_traits_ = "Repeated";
@@ -92,7 +93,7 @@ ExtensionGenerator::ExtensionGenerator(const FieldDescriptor* descriptor,
 ExtensionGenerator::~ExtensionGenerator() {}
 
 void ExtensionGenerator::GenerateDeclaration(io::Printer* printer) {
-  map<string, string> vars;
+  std::map<string, string> vars;
   vars["extendee"     ] = ExtendeeClassName(descriptor_);
   vars["number"       ] = SimpleItoa(descriptor_->number());
   vars["type_traits"  ] = type_traits_;
@@ -106,8 +107,8 @@ void ExtensionGenerator::GenerateDeclaration(io::Printer* printer) {
   // export/import specifier.
   if (descriptor_->extension_scope() == NULL) {
     vars["qualifier"] = "extern";
-    if (!dllexport_decl_.empty()) {
-      vars["qualifier"] = dllexport_decl_ + " " + vars["qualifier"];
+    if (!options_.dllexport_decl.empty()) {
+      vars["qualifier"] = options_.dllexport_decl + " " + vars["qualifier"];
     }
   } else {
     vars["qualifier"] = "static";
@@ -119,7 +120,6 @@ void ExtensionGenerator::GenerateDeclaration(io::Printer* printer) {
     "    ::google::protobuf::internal::$type_traits$, $field_type$, $packed$ >\n"
     "  $name$;\n"
     );
-
 }
 
 void ExtensionGenerator::GenerateDefinition(io::Printer* printer) {
@@ -128,7 +128,7 @@ void ExtensionGenerator::GenerateDefinition(io::Printer* printer) {
     ClassName(descriptor_->extension_scope(), false) + "::";
   string name = scope + descriptor_->name();
 
-  map<string, string> vars;
+  std::map<string, string> vars;
   vars["extendee"     ] = ExtendeeClassName(descriptor_);
   vars["type_traits"  ] = type_traits_;
   vars["name"         ] = name;
@@ -155,7 +155,7 @@ void ExtensionGenerator::GenerateDefinition(io::Printer* printer) {
   // Likewise, class members need to declare the field constant variable.
   if (descriptor_->extension_scope() != NULL) {
     printer->Print(vars,
-      "#ifndef _MSC_VER\n"
+      "#if !defined(_MSC_VER) || _MSC_VER >= 1900\n"
       "const int $scope$$constant_name$;\n"
       "#endif\n");
   }
@@ -164,44 +164,6 @@ void ExtensionGenerator::GenerateDefinition(io::Printer* printer) {
     "::google::protobuf::internal::ExtensionIdentifier< $extendee$,\n"
     "    ::google::protobuf::internal::$type_traits$, $field_type$, $packed$ >\n"
     "  $name$($constant_name$, $default$);\n");
-}
-
-void ExtensionGenerator::GenerateRegistration(io::Printer* printer) {
-  map<string, string> vars;
-  vars["extendee"   ] = ExtendeeClassName(descriptor_);
-  vars["number"     ] = SimpleItoa(descriptor_->number());
-  vars["field_type" ] = SimpleItoa(static_cast<int>(descriptor_->type()));
-  vars["is_repeated"] = descriptor_->is_repeated() ? "true" : "false";
-  vars["is_packed"  ] = (descriptor_->is_repeated() &&
-                         descriptor_->options().packed())
-                        ? "true" : "false";
-
-  switch (descriptor_->cpp_type()) {
-    case FieldDescriptor::CPPTYPE_ENUM:
-      printer->Print(vars,
-        "::google::protobuf::internal::ExtensionSet::RegisterEnumExtension(\n"
-        "  &$extendee$::default_instance(),\n"
-        "  $number$, $field_type$, $is_repeated$, $is_packed$,\n");
-      printer->Print(
-        "  &$type$_IsValid);\n",
-        "type", ClassName(descriptor_->enum_type(), true));
-      break;
-    case FieldDescriptor::CPPTYPE_MESSAGE:
-      printer->Print(vars,
-        "::google::protobuf::internal::ExtensionSet::RegisterMessageExtension(\n"
-        "  &$extendee$::default_instance(),\n"
-        "  $number$, $field_type$, $is_repeated$, $is_packed$,\n");
-      printer->Print(
-        "  &$type$::default_instance());\n",
-        "type", ClassName(descriptor_->message_type(), true));
-      break;
-    default:
-      printer->Print(vars,
-        "::google::protobuf::internal::ExtensionSet::RegisterExtension(\n"
-        "  &$extendee$::default_instance(),\n"
-        "  $number$, $field_type$, $is_repeated$, $is_packed$);\n");
-      break;
-  }
 }
 
 }  // namespace cpp

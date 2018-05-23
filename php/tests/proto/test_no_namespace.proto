@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option php_metadata_namespace = "\\";
+
+message NoNamespaceMessage {
+  int32 a = 1;
+
+  enum NestedEnum {
+    ZERO = 0;
+  }
+  NestedEnum b = 2;
+  repeated NestedEnum c = 3;
+}
+
+enum NoNamespaceEnum {
+  VALUE_A = 0;
+  VALUE_B = 1;
+}
